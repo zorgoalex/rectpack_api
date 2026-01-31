@@ -3,10 +3,11 @@ import sys
 from typing import Any, Dict
 
 from fastapi import FastAPI, Request
+from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
 
 from .config import settings
-from .errors import ApiError, ConstraintError, error_payload, InternalError
+from .errors import ApiError, ConstraintError, ValidationError, error_payload, InternalError
 from .models import ErrorResponse, OptimizeRequest, OptimizeResponse
 from .packing import optimize
 
@@ -38,6 +39,12 @@ async def limit_body(request: Request, call_next):
 @app.exception_handler(ApiError)
 async def api_error_handler(request: Request, exc: ApiError):
     return JSONResponse(status_code=exc.status_code, content=error_payload(exc))
+
+
+@app.exception_handler(RequestValidationError)
+async def request_validation_handler(request: Request, exc: RequestValidationError):
+    err = ValidationError("Request validation failed", details={"errors": exc.errors()})
+    return JSONResponse(status_code=err.status_code, content=error_payload(err))
 
 
 @app.exception_handler(Exception)

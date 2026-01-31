@@ -45,8 +45,8 @@ docker run --rm -p 8080:8080 --name rectpack-mvp rectpack-mvp
 - Request/response are JSON.
 - All dimensions are in millimeters (`mm`).
 - Successful responses include SVG in `artifacts.svg`.
-- Coordinate system in placements and SVG: origin (0,0) is the top-left of the usable area
-  (after `trim_mm`), X to the right, Y down.
+- Coordinate system in placements and SVG: origin (0,0) is the top-left of the stock sheet;
+  the usable area starts at `(trim.left, trim.top)`, X to the right, Y down.
 
 ### Example Request
 ```json
@@ -154,8 +154,8 @@ If `params.mode` is omitted, the service uses `guillotine`.
         {
           "item_id": "A",
           "instance": 1,
-          "x_mm": 0.0,
-          "y_mm": 0.0,
+          "x_mm": 10.0,
+          "y_mm": 10.0,
           "width_mm": 200.0,
           "height_mm": 300.0,
           "rotated": false,
@@ -165,7 +165,7 @@ If `params.mode` is omitted, the service uses `guillotine`.
     }
   ],
   "artifacts": {
-    "svg": "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"-10 -10 1000 800\">...</svg>"
+    "svg": "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 1000 800\">...</svg>"
   }
 }
 ```

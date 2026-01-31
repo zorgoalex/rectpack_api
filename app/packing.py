@@ -76,6 +76,14 @@ class _PackedRect:
     rid: int
 
 
+@dataclass(frozen=True)
+class _GuillotineRect:
+    x: int
+    y: int
+    w: int
+    h: int
+
+
 def _mm_to_int(value_mm: float, scale: int) -> int:
     return int(round(value_mm * scale))
 
@@ -305,6 +313,39 @@ def _extract_rects(packer) -> List[_PackedRect]:
     return rects
 
 
+def _is_guillotine(rects: List[_GuillotineRect], x0: int, y0: int, w: int, h: int) -> bool:
+    if len(rects) <= 1:
+        return True
+
+    xs = sorted({r.x for r in rects} | {r.x + r.w for r in rects})
+    for x in xs:
+        if x <= x0 or x >= x0 + w:
+            continue
+        if any(r.x < x < r.x + r.w for r in rects):
+            continue
+        left = [r for r in rects if r.x + r.w <= x]
+        right = [r for r in rects if r.x >= x]
+        if _is_guillotine(left, x0, y0, x - x0, h) and _is_guillotine(
+            right, x, y0, x0 + w - x, h
+        ):
+            return True
+
+    ys = sorted({r.y for r in rects} | {r.y + r.h for r in rects})
+    for y in ys:
+        if y <= y0 or y >= y0 + h:
+            continue
+        if any(r.y < y < r.y + r.h for r in rects):
+            continue
+        bottom = [r for r in rects if r.y + r.h <= y]
+        top = [r for r in rects if r.y >= y]
+        if _is_guillotine(bottom, x0, y0, w, y - y0) and _is_guillotine(
+            top, x0, y, w, y0 + h - y
+        ):
+            return True
+
+    return False
+
+
 def _build_instances(
     req: OptimizeRequest, engine: Engine, scale: int, seed: int
 ) -> Tuple[List[Tuple[int, _RectMeta]], int]:
@@ -449,6 +490,21 @@ def optimize(req: OptimizeRequest) -> OptimizeResponse:
         )
         if placed_count < len(instances):
             continue
+
+        if mode == "guillotine":
+            rects_by_bin: Dict[int, List[_GuillotineRect]] = {}
+            for rect in rects:
+                rects_by_bin.setdefault(rect.bin_index, []).append(
+                    _GuillotineRect(rect.x_int, rect.y_int, rect.w_int, rect.h_int)
+                )
+            violated = False
+            for bin_index, rect_list in rects_by_bin.items():
+                bin_meta = bins[bin_index]
+                if not _is_guillotine(rect_list, 0, 0, bin_meta.bin_w_int, bin_meta.bin_h_int):
+                    violated = True
+                    break
+            if violated:
+                continue
 
         if best is None:
             best = (used_bins_count, waste_area, waste_percent, placements_by_bin, rect_meta)

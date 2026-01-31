@@ -198,6 +198,9 @@ If `params.mode` is omitted, the service uses `guillotine`.
 - Engine compatibility:
   - `mode="guillotine"` requires `engine.packer="guillotine"` if provided.
   - `mode="nested"` forbids `engine.packer="guillotine"` if provided.
+- Guillotine validation: in `mode="guillotine"` the layout is accepted only if it can be obtained
+  by a sequence of full straight cuts (recursive splits of the current rectangle). Non‑guillotine
+  results are discarded; if none remain, the service returns `CONSTRAINT_ERROR`.
 
 ## Error Format
 Errors are returned as:

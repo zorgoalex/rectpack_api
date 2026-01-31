@@ -18,15 +18,6 @@ ENV PORT=8080 \
 
 EXPOSE 8080
 
-HEALTHCHECK --interval=30s --timeout=3s --retries=3 CMD python - <<'PY'
-import os
-import urllib.request
-
-port = os.getenv("PORT", "8080")
-url = f"http://127.0.0.1:{port}/health/live"
-with urllib.request.urlopen(url, timeout=2) as resp:
-    if resp.status != 200:
-        raise SystemExit(1)
-PY
+HEALTHCHECK --interval=30s --timeout=3s --retries=3 CMD python -c "import os,sys,urllib.request;port=os.getenv('PORT','8080');url='http://127.0.0.1:%s/health/live'%port;resp=urllib.request.urlopen(url,timeout=2);sys.exit(0 if resp.status==200 else 1)"
 
 CMD ["sh", "-c", "uvicorn app.main:app --host 0.0.0.0 --port ${PORT}"]

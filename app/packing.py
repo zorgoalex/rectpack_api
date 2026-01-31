@@ -366,8 +366,8 @@ def _evaluate_solution(
             continue
         meta = rect_meta[rect.rid]
         bin_meta = bins[rect.bin_index]
-        x_mm = _int_to_mm(rect.x_int, scale) + bin_meta.trim_left
-        y_mm = _int_to_mm(rect.y_int, scale) + bin_meta.trim_top
+        x_mm = _int_to_mm(rect.x_int, scale)
+        y_mm = _int_to_mm(rect.y_int, scale)
         placement = Placement(
             item_id=meta.item_id,
             instance=meta.instance,

@@ -76,6 +76,28 @@ docker run --rm -p 8080:8080 --name rectpack-mvp rectpack-mvp
 }
 ```
 
+### Example Request (Guillotine Default)
+If `params.mode` is omitted, the service uses `guillotine`.
+```json
+{
+  "units": "mm",
+  "params": {
+    "spacing_mm": 1.0,
+    "trim_mm": { "left": 5.0, "right": 5.0, "top": 5.0, "bottom": 5.0 },
+    "time_limit_ms": 300,
+    "restarts": 2,
+    "objective": "min_sheets"
+  },
+  "stock": [
+    { "id": "sheet-1200", "width_mm": 1200.0, "height_mm": 1000.0, "qty": 2 }
+  ],
+  "items": [
+    { "id": "P1", "width_mm": 400.0, "height_mm": 300.0, "qty": 3, "rotation": "allow_90", "pattern_direction": "none" },
+    { "id": "P2", "width_mm": 500.0, "height_mm": 200.0, "qty": 2, "rotation": "forbid", "pattern_direction": "along_width" }
+  ]
+}
+```
+
 ### Field-by-Field Explanation
 - `units`: Measurement units; must be `"mm"`.
 - `params`: Optimization parameters.
@@ -169,6 +191,8 @@ docker run --rm -p 8080:8080 --name rectpack-mvp rectpack-mvp
 - `units` must be `"mm"`.
 - Trim must not consume the entire sheet.
 - Each item must fit at least one stock sheet (considering trim, spacing, and rotation rules).
+- Mode default: if `params.mode` is omitted, the service uses `"guillotine"`.
+- `mode="nested"` is applied only when explicitly provided in the request.
 - Engine compatibility:
   - `mode="guillotine"` requires `engine.packer="guillotine"` if provided.
   - `mode="nested"` forbids `engine.packer="guillotine"` if provided.
@@ -183,6 +207,12 @@ Errors are returned as:
   "details": { "...": "..." }
 }
 ```
+
+## Error Codes
+- `VALIDATION_ERROR` (422): invalid fields/ranges, item does not fit, conflict between `rotation` and `pattern_direction`, or incompatible `mode` + `engine.packer`.
+- `CONSTRAINT_ERROR` (400): request is too large or violates service constraints.
+- `TIMEOUT` (408): exceeded `time_limit_ms`.
+- `INTERNAL` (500): unexpected server error.
 
 ## Environment Variables
 - `PORT` (default `8080`)

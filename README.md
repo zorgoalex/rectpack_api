@@ -21,16 +21,18 @@ It uses FastAPI and the `rectpack` engine and always returns an SVG artifact for
 python3 -m venv .venv
 . .venv/bin/activate
 pip install -r requirements.txt
-uvicorn app.main:app --host 0.0.0.0 --port 8080
+uvicorn app.main:app --host 0.0.0.0 --port 18088
 ```
 
-Service listens on `0.0.0.0:8080` by default.
+Service listens on `0.0.0.0:18088` for the command above.
 
 ## Quick Start (Docker)
 ```bash
 docker build -t rectpack-mvp .
-docker run --rm -p 8080:8080 --name rectpack-mvp rectpack-mvp
+docker run --rm -p 18088:8080 --name rectpack-mvp rectpack-mvp
 ```
+
+Note: examples below use external port `18088`.
 
 ## Health & Docs
 - `GET /health/live`
@@ -229,13 +231,13 @@ These tests validate the running container via a host-network curl image.
 
 ```bash
 # Start the container first
-docker run --rm -p 8080:8080 rectpack-mvp
+docker run --rm -p 18088:8080 rectpack-mvp
 ```
 
 In another terminal:
 ```bash
 # Health check
-docker run --rm --network host curlimages/curl:8.5.0 -s http://127.0.0.1:8080/health/live
+docker run --rm --network host curlimages/curl:8.5.0 -s http://127.0.0.1:18088/health/live
 
 # Optimize request
 cat > /tmp/optimize.json <<'JSON'
@@ -261,5 +263,5 @@ JSON
 
 docker run --rm --network host -v /tmp/optimize.json:/data.json:ro \
   curlimages/curl:8.5.0 -s -X POST -H 'Content-Type: application/json' \
-  --data @/data.json http://127.0.0.1:8080/v1/optimize
+  --data @/data.json http://127.0.0.1:18088/v1/optimize
 ```
